@@ -2,12 +2,16 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health, simulations, strategies
+from app.api.v1.endpoints import (
+    health,
+    offers,
+    simulations,
+    strategies,
+)
 
 api_router = APIRouter()
 
-# Include endpoint routers
-api_router.include_router(health.router, tags=["Health"])
-api_router.include_router(simulations.router, tags=["Simulations"])
-api_router.include_router(strategies.router, tags=["Strategies"])
-
+api_router.include_router(health.router, tags=["health"])
+api_router.include_router(simulations.router, prefix="/simulations", tags=["simulations"])
+api_router.include_router(strategies.router, prefix="/simulations/strategies", tags=["strategies"])
+api_router.include_router(offers.router, prefix="/offers", tags=["offers"])
