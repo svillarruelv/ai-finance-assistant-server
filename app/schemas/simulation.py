@@ -47,3 +47,37 @@ class CustomerCardSimulationsResponse(BaseModel):
     simulations: list[CardSimulationResult] = Field(
         ..., description="Simulation results for each card"
     )
+
+
+class LoanSimulationResult(BaseModel):
+    """Result of simulating payments on a single loan."""
+
+    loan_id: str = Field(..., description="External loan ID")
+    product_type: str = Field(..., description="Loan type (personal/micro)")
+    principal: Decimal = Field(..., description="Current principal balance")
+    annual_rate_pct: Decimal = Field(..., description="Annual interest rate (TEA)")
+    monthly_rate_pct: Decimal = Field(..., description="Monthly interest rate (TEM)")
+    remaining_term_months: int = Field(..., description="Remaining term in months")
+    calculated_monthly_payment: Decimal = Field(
+        ..., description="Minimum monthly payment required to pay off in term"
+    )
+    payment_used: Decimal = Field(
+        ..., description="Monthly payment used (custom or calculated)"
+    )
+    start_days_past_due: int = Field(..., description="Days past due at start")
+    past_due_fee: Decimal = Field(..., description="Penalty fee for past due")
+    total_months: int = Field(..., description="Actual months to pay off")
+    total_paid: Decimal = Field(..., description="Total amount paid")
+    total_interest_paid: Decimal = Field(..., description="Total interest paid")
+    monthly_schedule: list[MonthlyPaymentDetail] = Field(
+        ..., description="Month-by-month amortization schedule"
+    )
+
+
+class CustomerLoanSimulationsResponse(BaseModel):
+    """Response containing simulations for all customer loans."""
+
+    customer_id: str = Field(..., description="Customer external ID")
+    simulations: list[LoanSimulationResult] = Field(
+        ..., description="Simulation results for each loan"
+    )
