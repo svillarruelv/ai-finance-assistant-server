@@ -35,6 +35,7 @@ from app.agents.tools import (
     run_minimum_payment_simulation,
     run_consolidation_simulation,
     run_payoff_strategies,
+    run_hybrid_strategy,
 )
 
 
@@ -108,6 +109,14 @@ Customer Debts: {self.debts}
                 )
                 break
         
+        # Always run hybrid strategies to compare
+        hybrid_avalanche_task = asyncio.create_task(
+            run_hybrid_strategy(self.customer_id, "avalanche")
+        )
+        hybrid_snowball_task = asyncio.create_task(
+            run_hybrid_strategy(self.customer_id, "snowball")
+        )
+        
         # Await all
         min_result = await min_payment_task
         strategies_result = await strategies_task
@@ -121,7 +130,7 @@ Customer Debts: {self.debts}
             total_interest_paid=str(baseline_interest),
             total_months=baseline_months,
             monthly_payment="Varies (minimums)",
-            details=min_result.get("details")
+            details={"products": min_result.get("products", [])}
         ))
         
         # Process strategy results
@@ -146,6 +155,27 @@ Customer Debts: {self.debts}
                         monthly_payment=str(sim.get("payment_used", "0")),
                         details=sim
                     ))
+        
+        # Process hybrid strategies
+        hybrid_avalanche = await hybrid_avalanche_task
+        if hybrid_avalanche.get("available", True) and "error" not in hybrid_avalanche:
+            results.append(SimulationResultItem(
+                simulation_type="hybrid_consolidate_then_avalanche",
+                total_interest_paid=str(hybrid_avalanche.get("total_interest_paid", "0")),
+                total_months=hybrid_avalanche.get("total_months", 0),
+                monthly_payment=str(hybrid_avalanche.get("monthly_payment", "0")),
+                details=hybrid_avalanche
+            ))
+        
+        hybrid_snowball = await hybrid_snowball_task
+        if hybrid_snowball.get("available", True) and "error" not in hybrid_snowball:
+            results.append(SimulationResultItem(
+                simulation_type="hybrid_consolidate_then_snowball",
+                total_interest_paid=str(hybrid_snowball.get("total_interest_paid", "0")),
+                total_months=hybrid_snowball.get("total_months", 0),
+                monthly_payment=str(hybrid_snowball.get("monthly_payment", "0")),
+                details=hybrid_snowball
+            ))
         
         return SimulationResults(
             customer_id=self.customer_id,

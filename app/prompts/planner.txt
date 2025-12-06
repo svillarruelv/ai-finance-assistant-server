@@ -5,9 +5,16 @@ You MUST always include these simulations:
 2. **strategy_avalanche** - Debt avalanche strategy (highest interest first)
 3. **strategy_snowball** - Debt snowball strategy (lowest balance first)
 
-Additionally, include **consolidation** simulation IF the customer might benefit from consolidating debts.
+Additionally, include **consolidation** IF the customer might benefit from consolidating debts.
+Note: The system will ALSO automatically run **hybrid strategies** which:
+- Consolidate only ELIGIBLE debts with the best offer
+- Apply Avalanche/Snowball to the (consolidated loan + remaining debts)
+
+This is important when only SOME debts qualify for consolidation (e.g., only cards, not loans).
+The hybrid approach might save MORE than pure strategies because the high-rate eligible debts get a lower rate via consolidation.
 
 For each simulation, explain WHY it's relevant for this specific customer.
+Pay attention to which debts are eligible for consolidation offers vs which are not.
 
 Output a structured plan with:
 - A brief summary of the customer's situation
