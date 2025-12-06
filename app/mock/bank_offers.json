@@ -8,7 +8,9 @@
     "max_consolidated_balance": 50000,
     "new_rate_pct": 19.9,
     "max_term_months": 24,
-    "conditions": "No mora >30 días al momento de la solicitud"
+    "min_credit_score": null,
+    "max_days_past_due": 30,
+    "conditions_description": "No mora >30 días al momento de la solicitud"
   },
   {
     "offer_id": "OF-CONSO-36M",
@@ -20,6 +22,8 @@
     "max_consolidated_balance": 75000,
     "new_rate_pct": 17.5,
     "max_term_months": 36,
-    "conditions": "Score > 650 y sin mora activa"
+    "min_credit_score": 650,
+    "max_days_past_due": 0,
+    "conditions_description": "Score > 650 y sin mora activa"
   }
 ]

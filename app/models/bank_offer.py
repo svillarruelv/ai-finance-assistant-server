@@ -25,7 +25,13 @@ class BankOffer(Base, UUIDMixin, TimestampMixin):
     )
     new_rate_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     max_term_months: Mapped[int] = mapped_column(Integer, nullable=False)
-    conditions: Mapped[str] = mapped_column(String(500), nullable=True)
+
+    # Structured condition fields for filtering
+    min_credit_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_days_past_due: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    conditions_description: Mapped[str | None] = mapped_column(
+        String(500), nullable=True
+    )
 
     def __repr__(self) -> str:
         return f"BankOffer(offer_id={self.offer_id!r}, rate={self.new_rate_pct!r})"

@@ -105,7 +105,9 @@ async def seed_bank_offers(session) -> None:
             max_consolidated_balance=Decimal(str(offer_data["max_consolidated_balance"])),
             new_rate_pct=Decimal(str(offer_data["new_rate_pct"])),
             max_term_months=offer_data["max_term_months"],
-            conditions=offer_data.get("conditions"),
+            min_credit_score=offer_data.get("min_credit_score"),
+            max_days_past_due=offer_data.get("max_days_past_due"),
+            conditions_description=offer_data.get("conditions_description"),
         )
         session.add(offer)
         print(f"  ✅ Created bank offer {offer_id}")
