@@ -63,6 +63,77 @@ Core business logic is encapsulated in `app/services/`:
 
 ---
 
+## 🤖 AI Agent Pipeline
+
+The system uses a multi-agent pipeline powered by `openai-agents` to generate comprehensive financial reports in Spanish.
+
+### Pipeline Flow
+
+```mermaid
+graph TD
+    A[📋 Customer Request] --> B[🎯 Planner Agent]
+    B --> C[⚙️ Simulation Runner]
+    C --> D1[💰 Minimum Payment Sim]
+    C --> D2[📊 Strategy Sim - Avalanche/Snowball]
+    C --> D3[🏦 Consolidation Sim]
+    D1 & D2 & D3 --> E[📈 Sub-Analysts]
+    E --> E1[💵 Savings Analyst]
+    E --> E2[⚠️ Risk Analyst]
+    E1 & E2 --> F[✍️ Writer Agent]
+    F --> G[🔍 Verifier Agent]
+    G -->|Issues Found| H[🔄 Re-write with Fixes]
+    H --> G
+    G -->|Verified| I[✅ Final Report]
+```
+
+### Agents
+
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| **Planner** | `gpt-5-nano` | Analyzes customer profile and determines which simulations to run |
+| **Savings Analyst** | `gpt-5-nano` | Compares strategies and calculates interest savings with % comparisons |
+| **Risk Analyst** | `gpt-5-nano` | Identifies red flags (high DPD, tight cash flow, over-leverage) |
+| **Writer** | `gpt-5-mini` | Synthesizes data into comprehensive Spanish markdown report |
+| **Verifier** | `gpt-5-nano` | Audits report for consistency, completeness, and clarity |
+
+### Report Features
+- 🇪🇸 **Output in Spanish** with S/. (Peruvian Soles) currency
+- 📊 **Strategy explanations** - Avalanche, Snowball, Consolidation, and Optimized (_opt) strategies explained simply
+- 💰 **Percentage savings** comparing each strategy vs minimum payments
+- 🎯 **Step-by-step action plan** with exact amounts
+- 🔄 **Self-correction** - If verifier finds issues, writer re-generates fixed version
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/generate/{customer_id}` | Generate report (uses cache if exists) |
+| `POST` | `/generate/{customer_id}?reprocess=true` | Force regeneration |
+| `GET` | `/{customer_id}` | Get existing report from DB |
+
+### Project Structure
+
+```
+app/agents/
+├── manager.py           # Pipeline orchestrator
+├── planner_agent.py     # Plans which simulations to run
+├── savings_analyst.py   # Calculates interest savings
+├── risk_analyst.py      # Identifies financial risks
+├── writer_agent.py      # Writes the final report
+├── verifier_agent.py    # Audits the report
+├── schemas.py           # Pydantic models for agent outputs
+└── tools.py             # Tool functions for simulations
+
+app/prompts/
+├── planner.txt          # Planner agent instructions
+├── savings_analyst.txt  # Savings analyst instructions
+├── risk_analyst.txt     # Risk analyst instructions
+├── writer.txt           # Writer agent instructions (Spanish output)
+└── verifier.txt         # Verifier agent instructions
+```
+
+---
+
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
