@@ -22,6 +22,47 @@ The API will be available at: **http://localhost:8000**
 
 ---
 
+## 🔌 API Endpoints
+
+### 🏦 Bank Offers (`/api/v1/offers`)
+- **GET** `/eligibility/{customer_id}`
+  - Checks if a customer is eligible for consolidation offers based on credit score and past due status.
+- **GET** `/simulation/{customer_id}`
+  - Runs comprehensive consolidation simulations.
+  - **Standard**: Consolidates eligible debts at the offer rate/term.
+  - **Optimized**: Uses customer's max cash flow to pay down the consolidated loan faster.
+
+### 💳 Simulations (`/api/v1/simulations`)
+- **GET** `/cards/{customer_id}`
+  - Simulates paying off credit cards using specific monthly payments or minimums.
+- **GET** `/loans/{customer_id}`
+  - Simulates loan amortization schedules.
+
+### 📉 Strategies (`/api/v1/strategies`)
+- **GET** `/strategies/{customer_id}`
+  - Generates **Avalanche** (Highest Interest First) and **Snowball** (Lowest Balance First) payoff plans.
+  - Compares results under "Base" and "Conservative" income scenarios.
+
+### 💓 Health
+- **GET** `/api/v1/health`
+  - Service health check.
+
+---
+
+## 🧠 Services & Business Logic
+
+Core business logic is encapsulated in `app/services/`:
+
+| Service | Description |
+|---------|-------------|
+| **`consolidation.py`** | **OFFER ENGINE**: Handles filtering debts, checking offer constraints (balance limits), and running "Standard" vs "Optimized" consolidation scenarios. |
+| **`strategy_simulation.py`** | **PAYOFF ALGORITHMS**: Implements `Avalanche` and `Snowball` logic. Handles detailed month-by-month payment allocation across multiple debts. |
+| **`loan_simulation.py`** | **AMORTIZATION**: Calculates PMT (Monthly Payment), interest schedules, and prepayment impacts for fixed-term loans. |
+| **`card_simulation.py`** | **REVOLVING CREDIT**: Simulates credit card payoffs based on minimum payment percentages or fixed payments. |
+| **`offers.py`** | **ELIGIBILITY RULES**: Validates customer eligibility for bank offers (Credit Score > Min, DPD < Max). |
+
+---
+
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
