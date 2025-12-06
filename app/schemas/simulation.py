@@ -54,6 +54,9 @@ class LoanSimulationResult(BaseModel):
 
     loan_id: str = Field(..., description="External loan ID")
     product_type: str = Field(..., description="Loan type (personal/micro)")
+    consolidated_product_ids: list[str] | None = Field(
+        None, description="List of debt IDs included in this consolidation"
+    )
     principal: Decimal = Field(..., description="Current principal balance")
     annual_rate_pct: Decimal = Field(..., description="Annual interest rate (TEA)")
     monthly_rate_pct: Decimal = Field(..., description="Monthly interest rate (TEM)")

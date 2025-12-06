@@ -1,6 +1,6 @@
 """Loan simulation service for amortization simulations."""
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, ROUND_UP
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,48 +63,57 @@ def calculate_pmt(principal: Decimal, monthly_rate: Decimal, months: int) -> Dec
         
     factor = (Decimal("1") + monthly_rate) ** Decimal(months)
     pmt = principal * (monthly_rate * factor) / (factor - Decimal("1"))
-    return pmt.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    # Round UP to ensure we cover the full principal within the term
+    # avoiding "0.15 remainder" pushing into month N+1
+    return pmt.quantize(Decimal("0.5"), rounding=ROUND_UP)
 
 
-def simulate_loan_payments(
-    loan: Loan, 
-    monthly_payment: Decimal | None = None
+def simulate_simple_loan_data(
+    principal: Decimal,
+    annual_rate_pct: Decimal,
+    term_months: int,
+    product_type: str,
+    loan_id: str = "simulation",
+    custom_payment: Decimal | None = None,
+    start_days_past_due: int = 0,
+    consolidated_product_ids: list[str] | None = None
 ) -> LoanSimulationResult:
-    """Simulate paying off a loan with fixed or custom payments.
+    """Simulate paying off a loan with raw data parameters.
     
     Args:
-        loan: The loan to simulate
-        monthly_payment: Optional custom monthly payment. 
-                        If None, uses calculated PMT based on remaining term.
-    
+        principal: Loan principal amount
+        annual_rate_pct: Annual interest rate (TEA)
+        term_months: Remaining term in months
+        product_type: Type of loan (for reporting)
+        loan_id: ID for the simulation result
+        custom_payment: Optional custom monthly payment.
+                        If None, uses calculated PMT based on term.
+        start_days_past_due: Days past due at start
+        consolidated_product_ids: Optional list of consolidated debt IDs
+        
     Returns:
         LoanSimulationResult with amortization schedule
     """
     # Convert rates
-    annual_rate = loan.annual_rate_pct
-    monthly_rate_pct = tea_to_tem(annual_rate)
-    daily_rate_pct = tea_to_ted(annual_rate)
+    monthly_rate_pct = tea_to_tem(annual_rate_pct)
+    daily_rate_pct = tea_to_ted(annual_rate_pct)
     
     monthly_rate = monthly_rate_pct / Decimal("100")
     daily_rate = daily_rate_pct / Decimal("100")
     
-    principal = loan.principal
-    remaining_term = loan.remaining_term_months
-    days_past_due = loan.days_past_due
-    
     # Calculate required base payment (PMT)
-    base_payment = calculate_pmt(principal, monthly_rate, remaining_term)
+    base_payment = calculate_pmt(principal, monthly_rate, term_months)
     
     # Determine actual payment to use (max of base or custom)
-    if monthly_payment is not None:
-        payment_used = max(monthly_payment, base_payment)
+    if custom_payment is not None:
+        payment_used = max(custom_payment, base_payment)
     else:
         payment_used = base_payment
 
     # Calculate past due fee (only applied on first payment)
     past_due_fee = Decimal("0")
-    if days_past_due > 0:
-        past_due_fee = (daily_rate * days_past_due * principal).quantize(
+    if start_days_past_due > 0:
+        past_due_fee = (daily_rate * start_days_past_due * principal).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
     
@@ -132,15 +141,7 @@ def simulate_loan_payments(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
         
-        # Use full payment if balance is low (payoff)
-        total_due = balance + interest
-        if month == 1 and past_due_fee > 0:
-             # Look ahead: if we pay just balance + interest, we might miss the fee part if we constrain by total_due?
-             # No, payment is allocated: first fee, then interest, then principal.
-             pass
-        
         # Cap payment at total amount needed to clear debt this month
-        # Logic: If (Balance + Interest + Fee (if m=1)) <= Payment, we pay it all off.
         amount_needed = balance + interest
         if month == 1:
             amount_needed += past_due_fee
@@ -149,10 +150,6 @@ def simulate_loan_payments(
             current_payment = amount_needed
             
         # Allocation
-        # 1. Past due fee (if month 1)
-        # 2. Interest
-        # 3. Principal
-        
         remaining_payment = current_payment
         fee_paid = Decimal("0")
         
@@ -170,14 +167,14 @@ def simulate_loan_payments(
         
         # Update cumulative
         cumulative_paid += current_payment
-        cumulative_interest += interest_paid # Only interest part counts towards interest paid
+        cumulative_interest += interest_paid
         
         monthly_schedule.append(
             MonthlyPaymentDetail(
                 month=month,
                 starting_balance=starting_balance,
                 payment=current_payment,
-                interest_charged=interest_paid, # Reporting interest paid
+                interest_charged=interest_paid,
                 ending_balance=max(balance, Decimal("0")),
                 total_paid=cumulative_paid,
                 total_interest=cumulative_interest,
@@ -189,18 +186,44 @@ def simulate_loan_payments(
             break
             
     return LoanSimulationResult(
-        loan_id=loan.external_id,
-        product_type=loan.loan_type,
+        loan_id=loan_id,
+        product_type=product_type,
+        consolidated_product_ids=consolidated_product_ids,
         principal=principal,
-        annual_rate_pct=annual_rate,
+        annual_rate_pct=annual_rate_pct,
         monthly_rate_pct=monthly_rate_pct,
-        remaining_term_months=remaining_term,
+        remaining_term_months=term_months,
         calculated_monthly_payment=base_payment,
         payment_used=payment_used,
-        start_days_past_due=days_past_due,
+        start_days_past_due=start_days_past_due,
         past_due_fee=past_due_fee,
         total_months=month,
         total_paid=cumulative_paid,
         total_interest_paid=cumulative_interest,
         monthly_schedule=monthly_schedule,
+    )
+
+
+def simulate_loan_payments(
+    loan: Loan, 
+    monthly_payment: Decimal | None = None
+) -> LoanSimulationResult:
+    """Simulate paying off a loan with fixed or custom payments.
+    
+    Args:
+        loan: The loan to simulate
+        monthly_payment: Optional custom monthly payment. 
+                        If None, uses calculated PMT based on remaining term.
+    
+    Returns:
+        LoanSimulationResult with amortization schedule
+    """
+    return simulate_simple_loan_data(
+        principal=loan.principal,
+        annual_rate_pct=loan.annual_rate_pct,
+        term_months=loan.remaining_term_months,
+        product_type=loan.loan_type,
+        loan_id=loan.external_id,
+        custom_payment=monthly_payment,
+        start_days_past_due=loan.days_past_due
     )
