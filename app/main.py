@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from agents import set_default_openai_key
 from app.api.v1.router import api_router
 from app.config import get_settings
 from app.core.db import close_db, init_db
@@ -17,6 +18,8 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler for startup and shutdown events."""
     # Startup
     settings = get_settings()
+    if settings.openai_api_key:
+        set_default_openai_key(settings.openai_api_key)
     print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
     await init_db()
     yield

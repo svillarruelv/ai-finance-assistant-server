@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     app_name: str = "AI Finance Assistant"
     app_version: str = "0.1.0"
     debug: bool = False
+    openai_api_key: str | None = None
 
     # Server
     host: str = "0.0.0.0"
