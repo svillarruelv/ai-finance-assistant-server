@@ -12,6 +12,7 @@ class HealthResponse(BaseModel):
 
     status: str
     version: str
+    database: str | None = None
 
 
 class APIResponse(BaseModel, Generic[DataT]):
