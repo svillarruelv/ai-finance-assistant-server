@@ -1,5 +1,27 @@
 # Backend - AI Finance Assistant
 
+## 🚀 Quick Start
+
+Get the project running in 3 steps:
+
+```bash
+# 1. Start the containers
+docker compose up --build -d
+
+# 2. Apply database migrations
+docker exec finance-server alembic upgrade head
+
+# 3. Seed the database with sample data
+docker exec finance-server python scripts/db_seed.py
+```
+
+The API will be available at: **http://localhost:8000**
+
+- Swagger docs: http://localhost:8000/docs
+- Health check: http://localhost:8000/api/v1/health
+
+---
+
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
