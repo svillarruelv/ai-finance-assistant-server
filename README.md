@@ -99,17 +99,36 @@ docker exec finance-server alembic upgrade head
 docker exec finance-server alembic downgrade -1
 ```
 
-### View Current Migration Status
-
-```bash
-docker exec finance-server alembic current
-```
-
 ### View Migration History
 
 ```bash
 docker exec finance-server alembic history
 ```
+
+---
+
+## 🌱 Database Seeding
+
+Populate the database with sample data from `app/mock/` files.
+
+### Run the Seeder
+
+```bash
+docker exec finance-server python scripts/db_seed.py
+```
+
+The seeder is **idempotent** - running it multiple times will skip existing records.
+
+### Mock Data Files
+
+| File | Description |
+|------|-------------|
+| `customer_cashflow.csv` | Customer financial profiles |
+| `loans.csv` | Loan products |
+| `cards.csv` | Credit card products |
+| `payments_history.csv` | Payment transactions |
+| `credit_score_history.csv` | Credit score records |
+| `bank_offers.json` | Consolidation offers |
 
 ---
 
