@@ -1,5 +1,6 @@
 """Models module - imports all models for Alembic to detect."""
 
+from app.models.report import FinancialReport
 from app.models.bank_offer import BankOffer
 from app.models.card import Card
 from app.models.credit_score_history import CreditScoreHistory
