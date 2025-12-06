@@ -96,7 +96,7 @@ def simulate_card_payments(
         else:
             payment = max((balance * min_payment_rate).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
-            ), 1)
+            ), 50)
         
         # Add past due fee to first payment only
         if month == 1 and past_due_fee > 0:

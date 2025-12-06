@@ -191,7 +191,7 @@ def simulate_strategy(
 
     total_months = 0
     month_idx = 0
-    max_months = 600 # 50y cap
+    max_months = 300 # 50y cap
     
     monthly_output: list[dict] = [] # To map to StrategyMonthlyAllocation schemas later
     

@@ -124,7 +124,7 @@ def simulate_simple_loan_data(
     balance = principal
     
     # Safety limit
-    max_months = 1200 
+    max_months = 300 
     
     while balance > Decimal("0.01") and month < max_months:
         month += 1
