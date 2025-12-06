@@ -30,6 +30,17 @@ class Settings(BaseSettings):
     # API
     api_v1_prefix: str = "/api/v1"
 
+    # Database
+    postgres_server: str = "localhost"
+    postgres_user: str = "postgres"
+    postgres_password: str = "postgres"
+    postgres_db: str = "finance_assistant"
+    postgres_port: int = 5432
+
+    @property
+    def sqlalchemy_database_uri(self) -> str:
+        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_server}:{self.postgres_port}/{self.postgres_db}"
+
 
 @lru_cache
 def get_settings() -> Settings:

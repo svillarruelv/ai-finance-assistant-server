@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.config import get_settings
+from app.core.db import close_db, init_db
 from app.core.exceptions import register_exception_handlers
 from app.core.middleware import RequestLoggingMiddleware
 
@@ -17,8 +18,10 @@ async def lifespan(app: FastAPI):
     # Startup
     settings = get_settings()
     print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
+    await init_db()
     yield
     # Shutdown
+    await close_db()
     print("👋 Shutting down...")
 
 
