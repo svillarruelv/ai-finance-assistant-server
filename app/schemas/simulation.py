@@ -81,3 +81,48 @@ class CustomerLoanSimulationsResponse(BaseModel):
     simulations: list[LoanSimulationResult] = Field(
         ..., description="Simulation results for each loan"
     )
+
+
+class SimulationAllocation(BaseModel):
+    """Payment allocation for a specific debt in a month."""
+    debt_id: str
+    debt_name: str | None = None
+    payment_amount: Decimal
+    principal_paid: Decimal = Field(..., description="Amount applied to principal")
+    interest_paid: Decimal = Field(..., description="Amount applied to interest")
+    ending_balance: Decimal = Field(..., description="Balance after payment")
+    status: str # 'active', 'paid_off'
+
+
+class StrategyMonthlyAllocation(BaseModel):
+    """Monthly breakdown of payments in a strategy."""
+    month: int
+    total_payment: Decimal
+    allocations: list[SimulationAllocation]
+    remaining_total_balance: Decimal
+
+
+class StrategyResult(BaseModel):
+    """Result of a debt payoff strategy simulation."""
+
+    strategy_name: str = Field(..., description="Name of the strategy (e.g. Avalanche)")
+    monthly_capacity: Decimal = Field(..., description="Monthly payment capacity used")
+    total_months: int = Field(..., description="Total months to be debt free")
+    total_interest_paid: Decimal = Field(..., description="Total interest paid across all debts")
+    freedom_date: str = Field(..., description="Estimated debt-free date (YYYY-MM)")
+    total_balance_paid: Decimal = Field(..., description="Total principal paid")
+    monthly_schedule: list[StrategyMonthlyAllocation] = Field(
+        default_factory=list, description="Detailed monthly payment schedule"
+    )
+
+
+class CustomerStrategyResponse(BaseModel):
+    """Response containing multiple priority strategy scenarios."""
+
+    customer_id: str = Field(..., description="Customer external ID")
+    recommended_strategy: str | None = Field(
+        None, description="Name of the recommended strategy (lowest interest)"
+    )
+    strategies: list[StrategyResult] = Field(
+        ..., description="List of strategy simulation results"
+    )
